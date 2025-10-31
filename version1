@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Jo Eusébe — This or That</title>
+  <style>
+    :root{
+      --bg1:#0e9f6e; --bg2:#0b74c1; --accent:#f7c325;
+      --ink:#0c1b1f; --white:#fff; --card:#ffffffcc;
+      --shadow:0 10px 30px rgba(0,0,0,.15); --radius:18px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial;
+      color:var(--ink);
+      background: radial-gradient(1200px 1200px at 100% -10%, rgba(255,255,255,.08), transparent 60%),
+                  radial-gradient(1200px 1200px at -10% 100%, rgba(255,255,255,.08), transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      display:flex; align-items:center; justify-content:center;
+      padding:clamp(12px,3vh,28px);
+    }
+    .app{width:min(920px,100%); background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(6px); overflow:hidden}
+    header{background:linear-gradient(135deg,var(--accent),#ffd85a); padding:clamp(14px,2.2vh,22px) clamp(16px,2vw,28px); display:flex; align-items:center; gap:12px; justify-content:space-between}
+    .brand{display:flex; align-items:center; gap:12px}
+    .badge{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from 180deg,var(--bg1),var(--bg2));color:#fff;font-weight:800;box-shadow:0 4px 10px rgba(0,0,0,.15)}
+    h1{margin:0;font-size:clamp(18px,2.6vw,26px);line-height:1.1}
+    header p{margin:0;opacity:.8;font-size:clamp(12px,1.7vw,14px)}
+    main{padding:clamp(16px,3vh,28px)}
+    .card{background:var(--white);border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.08);padding:clamp(16px,3vh,24px)}
+    .rules{display:grid;gap:10px;font-size:clamp(14px,2.2vw,16px)}
+    .actions{margin-top:16px;display:flex;gap:12px;flex-wrap:wrap}
+    button{-webkit-tap-highlight-color:transparent;border:none;cursor:pointer;background:var(--bg2);color:#fff;font-weight:700;padding:14px 18px;border-radius:14px;box-shadow:0 6px 16px rgba(11,116,193,.25);font-size:16px;transition:.2s transform ease,.2s box-shadow ease,.2s background ease}
+    button:hover{transform:translateY(-2px)} button:active{transform:translateY(0);box-shadow:0 4px 10px rgba(0,0,0,.18)}
+    .ghost{background:#e6f0fb;color:#0b74c1;box-shadow:none}
+    .accent{background:var(--bg1);box-shadow:0 6px 16px rgba(14,159,110,.25)}
+    .arena{display:grid;gap:14px;margin-top:10px}
+    .versus{display:grid;gap:14px;grid-template-columns:1fr}
+    .pick{
+      background:#fff;border:2px solid #eef2f7;border-radius:16px;padding:18px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      box-shadow:0 8px 22px rgba(0,0,0,.06);
+      /* FIX: make text visible on white */
+      color:var(--ink);
+    }
+    .song{font-size:clamp(18px,3.8vw,26px);font-weight:800;letter-spacing:.2px;word-break:break-word}
+    .label{font-size:12px;opacity:.6}
+    .progress{margin:8px 0 0;height:8px;width:100%;background:#eef2f7;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ffe17e)}
+    .footer-note{opacity:.7;font-size:12px;margin-top:10px;text-align:center}
+    .result{display:grid;place-items:center;text-align:center;gap:12px;padding:10px 0}
+    .big{font-size:clamp(22px,5.5vw,40px);line-height:1.1;font-weight:900;background:linear-gradient(135deg,var(--bg1),var(--bg2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+    .piece{position:absolute;width:10px;height:16px;opacity:.9;transform:translate(-50%,-50%);animation:fall 1.2s ease-out forwards}
+    @keyframes fall{0%{transform:translateY(-20vh) rotate(0)}100%{transform:translateY(110vh) rotate(620deg)}}
+    @media (min-width:700px){.versus{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Jo Eusébe — This or That">
+    <header>
+      <div class="brand">
+        <div class="badge" aria-hidden="true">JO</div>
+        <div>
+          <h1>Jo Eusébe — This or That</h1>
+          <p>Pick between two Jo Eusébe classics until one champion remains.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="screen-rules" class="card" aria-live="polite">
+        <ol class="rules">
+          <li>Tap the song you prefer. The other one is eliminated.</li>
+          <li>Your chosen song faces the next challenger.</li>
+          <li>Continue until only one song survives.</li>
+          <li>At the end, we’ll reveal <strong>your favorite Jo Eusébe song</strong> 🎉</li>
+        </ol>
+        <div class="actions">
+          <button id="btn-start" class="accent">Start</button>
+          <button id="btn-shuffle" class="ghost" title="Shuffle song order">Shuffle list</button>
+        </div>
+      </section>
+
+      <section id="screen-game" class="card" hidden>
+        <div class="arena">
+          <div class="label" id="round-label">Round</div>
+          <div class="versus" aria-live="polite">
+            <button id="optA" class="pick" aria-label="Option A"></button>
+            <button id="optB" class="pick" aria-label="Option B"></button>
+          </div>
+          <div class="progress"><div class="bar" id="bar"></div></div>
+          <div class="footer-note" id="left-note"></div>
+        </div>
+      </section>
+
+      <section id="screen-result" class="card" hidden>
+        <div class="result">
+          <div class="big">Your favorite Jo Eusébe song is…</div>
+          <div class="big" id="winner">—</div>
+          <div class="actions" style="justify-content:center">
+            <button id="btn-again" class="accent">Play again</button>
+            <button id="btn-copy" class="ghost">Copy result</button>
+          </div>
+          <div class="footer-note">Share with your fan club: long live Jo Eusébe! 🇧🇷</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="fx" class="confetti" aria-hidden="true"></div>
+
+  <script>
+    const SONGS = [
+      "Dábuerre","Kilo Cianga Beto' Tahat","Makásh","Kishtá ômles","Esti Cocus","Shoá",
+      "Sigáriot","Hálomé de Asdode","Lek Habaita moti","Tsee-Tsee","Ricardo",
+      "Érets Paç Ashpa","Lo'Roéh Clôum","Ga Ga Ga","Yala Doctor","Ahótcá"
+    ];
+
+    const screenRules=document.getElementById('screen-rules');
+    const screenGame=document.getElementById('screen-game');
+    const screenResult=document.getElementById('screen-result');
+    const btnStart=document.getElementById('btn-start');
+    const btnShuffle=document.getElementById('btn-shuffle');
+    const btnAgain=document.getElementById('btn-again');
+    const btnCopy=document.getElementById('btn-copy');
+    const optA=document.getElementById('optA');
+    const optB=document.getElementById('optB');
+    const bar=document.getElementById('bar');
+    const leftNote=document.getElementById('left-note');
+    const roundLabel=document.getElementById('round-label');
+    const winnerEl=document.getElementById('winner');
+    const fx=document.getElementById('fx');
+
+    let order=[], champion=null, index=0;
+
+    function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+    function setScreen(s){ screenRules.hidden=s!=='rules'; screenGame.hidden=s!=='game'; screenResult.hidden=s!=='result'; }
+    function startGame(){ order=shuffle(SONGS); champion=order.shift(); index=0; updateUI(); setScreen('game'); }
+    function sanitize(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function updateUI(){
+      const challenger=order[index];
+      if(!challenger){ showResult(champion); return; }
+      optA.innerHTML=`<span class="song">${sanitize(champion)}</span>`;
+      optB.innerHTML=`<span class="song">${sanitize(challenger)}</span>`;
+      optA.setAttribute('aria-label',`Choose ${champion}`);
+      optB.setAttribute('aria-label',`Choose ${challenger}`);
+
+      const total=SONGS.length-1;
+      const progress=Math.min(((SONGS.length-1)-(order.length-index-1))/total,1);
+      bar.style.width=(progress*100)+'%';
+      leftNote.textContent=`${order.length-index} songs left`;
+      roundLabel.textContent=`Round ${Math.max(1,(SONGS.length-order.length))}`;
+    }
+
+    function choose(which){
+      const challenger=order[index];
+      if(which==='B') champion=challenger;
+      index++;
+      if(index>=order.length){ if(order.length===0){ showResult(champion); return; } order=order.slice(index); index=0; if(order.length===0){ showResult(champion); return; } }
+      updateUI();
+    }
+
+    function showResult(win){
+      setScreen('result');
+      winnerEl.textContent=`🎉 ${win} 🎉`;
+      burst();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function burst(){
+      fx.innerHTML='';
+      const colors=['#1aa66a','#1195e0','#ffd45a','#ffffff'];
+      const pieces=Math.min(120,Math.floor(window.innerWidth/6));
+      for(let i=0;i<pieces;i++){
+        const d=document.createElement('div');
+        d.className='piece';
+        d.style.left=Math.random()*100+'vw';
+        d.style.top=(-5-Math.random()*20)+'vh';
+        d.style.background=colors[i%colors.length];
+        d.style.animationDuration=(0.9+Math.random()*0.9)+'s';
+        d.style.width=(8+Math.random()*8)+'px';
+        d.style.height=(10+Math.random()*14)+'px';
+        fx.appendChild(d);
+      }
+      setTimeout(()=>{fx.innerHTML='';},2200);
+    }
+
+    function copyResult(){
+      const text=`${winnerEl.textContent.replaceAll('🎉','').trim()} — picked on "Jo Eusébe — This or That"`;
+      navigator.clipboard?.writeText(text).then(()=>{btnCopy.textContent='Copied!'; setTimeout(()=>btnCopy.textContent='Copy result',1200);}).catch(()=>{alert(text);});
+    }
+
+    btnStart.addEventListener('click', startGame);
+    btnShuffle.addEventListener('click', startGame);
+    optA.addEventListener('click', ()=>choose('A'));
+    optB.addEventListener('click', ()=>choose('B'));
+    btnAgain?.addEventListener('click', ()=>setScreen('rules'));
+    btnCopy?.addEventListener('click', copyResult);
+  </script>
+</body>
+</html>
